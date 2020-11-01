@@ -3,7 +3,6 @@ from urllib.request import urlopen
 import xml.etree.ElementTree as ET
 
 
-
 def get_root():
     try:
         url = urlopen('http://www.cbr.ru/scripts/XML_valFull.asp')
