@@ -1,6 +1,7 @@
 from datetime import datetime
-import xml.etree.ElementTree as ET
 from urllib.request import urlopen
+import xml.etree.ElementTree as ET
+
 
 
 def get_root():
@@ -8,7 +9,7 @@ def get_root():
         url = urlopen('http://www.cbr.ru/scripts/XML_valFull.asp')
         return ET.parse(url)
     except ET.ParseError:
-        print('Probably the page not found')
+        return 'Probably the page not found'
 
 
 def get_list_currency():
@@ -34,28 +35,23 @@ def parse_id():
     return currency_values
 
 
-def get_day(date, code, data):
-    item_id = ''
+def get_day(date, code):
     currency_date = {'date': date, 'currency_rate': None}
-    for key, value in data.items():
-        if key == code:
-            item_id = value
-            break
     year, month, day = date.split('-')
     try:
         response = ET.parse(urlopen(f'http://www.cbr.ru/scripts/XML_daily.asp?date_req={day}/{month}/{year}'))
         root = response.getroot()
         try:
-            currency = root.find(f"./Valute[@ID='{item_id}']/Value").text.replace(',', '.')
+            currency = root.find(f"./Valute[@ID='{code}']/Value").text.replace(',', '.')
             currency_date['date'] = date
             currency_date['currency_rate'] = currency
             return currency_date
         except AttributeError:
-            print("No Attribute")
+            return "No Attribute"
         finally:
             return currency_date
-    except ET.ParseError:
-        print('Error')
+    except ET.ParseError as e:
+        return e
 
 
 def validate_date(date):
@@ -63,4 +59,16 @@ def validate_date(date):
         year, month, day = date.split('-')
         return datetime(int(year), int(month), int(day))
     except ValueError as e:
+        return False
+
+
+def check_code(code):
+    codes = parse_id()
+    if len(code) == 3:
+        for key, value in codes.items():
+            if key == code:
+                return value
+        else:
+            return False
+    else:
         return False
