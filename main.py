@@ -7,11 +7,16 @@ app = Flask(__name__)
 
 @app.route('/currencies/api/v1.0/', methods=['GET'])
 def get_currencies_list():
+    """ Метод возвращает список валюты и наименование валют """
     return jsonify(get_list_currency())
 
 
 @app.route('/exchange/api/v1.0/', methods=['GET'])
 def exchange_rate_differential():
+    """ Метод принимает две даты в формате YYYY-MM-DD и код валюты.
+    Пример запроса: /exchange/api/v1.0/?date1=2002-03-02&date2=2020-03-02&code=USD
+    Возвращает курсы валют за заданные даты и разницу между ними.
+    """
     date1 = request.args.get('date1', type=str)
     date2 = request.args.get('date2', type=str)
     code = request.args.get('code', type=str).upper()

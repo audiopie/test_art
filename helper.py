@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 
 
 def get_root():
+    """ Отправляем запрос на страницу бонка и парсим с помощью библиотеки xml.etree."""
     try:
         url = urlopen('http://www.cbr.ru/scripts/XML_valFull.asp')
         return ET.parse(url)
@@ -12,6 +13,7 @@ def get_root():
 
 
 def get_list_currency():
+    """ Парсим дом дерево и находим имя валют, код, сохраняем в массив."""
     root = get_root()
     names = root.findall('.//Name')
     codes = root.findall('.//ISO_Char_Code')
@@ -24,6 +26,7 @@ def get_list_currency():
 
 
 def parse_id():
+    """ Парсим дом дерево и находим ID  валют, код."""
     root = get_root()
     item_ids = root.findall('./Item')
     codes = root.findall('.//ISO_Char_Code')
@@ -35,6 +38,9 @@ def parse_id():
 
 
 def get_day(date, code):
+    """ Обрабатываем данные и отправляем запрос на получение значения курса за определенный день
+        Возвращает словарь с курсом валюты и датой.
+    """
     currency_date = {'date': date, 'currency_rate': None}
     year, month, day = date.split('-')
     try:
@@ -54,6 +60,7 @@ def get_day(date, code):
 
 
 def validate_date(date):
+    """ Валидации даты, например 2020-02-30 не является корректной датой"""
     try:
         year, month, day = date.split('-')
         return datetime(int(year), int(month), int(day))
@@ -62,6 +69,7 @@ def validate_date(date):
 
 
 def check_code(code):
+    """ Валидируем код, не должен быть меньше трех символов и должен быть в списке валют"""
     codes = parse_id()
     if len(code) == 3:
         for key, value in codes.items():
