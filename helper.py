@@ -57,3 +57,10 @@ def get_day(date, code, data):
     except ET.ParseError:
         print('Error')
 
+
+def validate_date(date):
+    try:
+        year, month, day = date.split('-')
+        return datetime(int(year), int(month), int(day))
+    except ValueError as e:
+        return False
