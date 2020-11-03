@@ -58,11 +58,13 @@ class CurrencyApi:
     @staticmethod
     def validate_date(date):
         """ Валидации даты, например 2020-02-30 не является корректной датой"""
-        try:
-            year, month, day = date.split('-')
-            return datetime(int(year), int(month), int(day))
-        except ValueError as e:
-            return False
+        year, month, day = date.split('-')
+        current_date = datetime.now()
+        date = datetime(int(year), int(month), int(day))
+
+        if date > current_date or date.year < 1992:
+            raise AttributeError('Error: input date is future or past')
+        return datetime(int(year), int(month), int(day))
 
     def check_code(self, code):
         """ Валидируем код, не должен быть меньше трех символов и должен быть в списке валют"""
@@ -75,6 +77,6 @@ class CurrencyApi:
                 if key == code:
                     return value
             else:
-                return False
+                raise ValueError
         else:
-            return False
+            raise ValueError
