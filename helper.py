@@ -1,21 +1,21 @@
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from urllib.request import urlopen
-import xml.etree.ElementTree as ET
 
 
 class CurrencyApi:
 
-    def __init__(self):
-        self.url = urlopen('http://www.cbr.ru/scripts/XML_valFull.asp')
-        self.list_of_currencies = ET.parse(self.url)
+    def __init__(self, url):
+        self.list_of_currencies = url
         self.names = self.list_of_currencies.findall('.//Name')
         self.codes = self.list_of_currencies.findall('.//ISO_Char_Code')
         self.ids = self.list_of_currencies.findall('./Item')
         self.list_result = []
         self.currency_values = {}
+        self.cache = {}
 
     def get_list_currency(self):
-        """ Парсим дом дерево и находим имя валют, код, сохраняем в массив."""
+        """ Возвращаем массив валют"""
         for key, value in zip(self.names, self.codes):
             if value.text:
                 row = {value.text: key.text}
@@ -23,7 +23,7 @@ class CurrencyApi:
         return self.list_result
 
     def parse_id(self):
-        """ Парсим дом дерево и находим ID  валют, код."""
+        """ Возвращаем словарь ID валюты и его код"""
         for k, v in zip(self.ids, self.codes):
             for i in k.attrib.values():
                 self.currency_values[v.text] = i
@@ -34,23 +34,29 @@ class CurrencyApi:
             Возвращает словарь с курсом валюты и датой.
         """
         currency_date = {'date': date, 'currency_rate': None}
-        year, month, day = date.split('-')
         try:
+            year, month, day = date.split('-')
             response = ET.parse(urlopen(f'http://www.cbr.ru/scripts/XML_daily.asp?date_req={day}/{month}/{year}'))
-            root = response.getroot()
-            try:
-                currency = root.find(f"./Valute[@ID='{code}']/Value").text.replace(',', '.')
-                currency_date['date'] = date
-                currency_date['currency_rate'] = currency
-                return currency_date
-            except AttributeError:
-                return "No Attribute"
-            finally:
-                return currency_date
-        except ET.ParseError as e:
-            return e
+        except ET.ParseError:
+            return "Непральный URL адрес"
 
-    def validate_date(self, date):
+        if date not in self.cache:
+            self.cache[date] = response
+            return self.get_data_from_day(response, date, code, currency_date)
+        else:
+            return self.get_data_from_day(response, date, code, currency_date)
+
+    def get_data_from_day(self, tree, date, code, currency):
+        self.cache[date] = tree
+        currency_date = currency
+        root = self.cache[date].getroot()
+        currency = root.find(f"./Valute[@ID='{code}']/Value").text.replace(',', '.')
+        currency_date['date'] = date
+        currency_date['currency_rate'] = currency
+        return currency_date
+
+    @staticmethod
+    def validate_date(date):
         """ Валидации даты, например 2020-02-30 не является корректной датой"""
         try:
             year, month, day = date.split('-')
