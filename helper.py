@@ -34,20 +34,15 @@ class CurrencyApi:
             Возвращает словарь с курсом валюты и датой.
         """
         currency_date = {'date': date, 'currency_rate': None}
-        try:
+        if date not in self.cache:
             year, month, day = date.split('-')
             response = ET.parse(urlopen(f'http://www.cbr.ru/scripts/XML_daily.asp?date_req={day}/{month}/{year}'))
-        except ET.ParseError:
-            return "Непральный URL адрес"
-
-        if date not in self.cache:
             self.cache[date] = response
-            return self.get_data_from_day(response, date, code, currency_date)
+            return self.get_data_from_day(date, code, currency_date)
         else:
-            return self.get_data_from_day(response, date, code, currency_date)
+            return self.get_data_from_day(date, code, currency_date)
 
-    def get_data_from_day(self, tree, date, code, currency):
-        self.cache[date] = tree
+    def get_data_from_day(self, date, code, currency):
         currency_date = currency
         root = self.cache[date].getroot()
         currency = root.find(f"./Valute[@ID='{code}']/Value").text.replace(',', '.')
