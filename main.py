@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 from flask import Flask
-from flask import jsonify, request
+from flask import jsonify, request, make_response
 from urllib.request import urlopen
 from helper import CurrencyApi
 
@@ -23,15 +23,15 @@ def exchange_rate_differential():
     date2 = request.args.get('date2', type=str)
     code = request.args.get('code', type=str).upper()
     if date1 == '' or date2 == '' or code == '':  # Если один из параметров пуст возвращается ответ о ошибке запроса
-        return jsonify(f'Error: some data in requests is empty')
+        return jsonify(f'Error: some data in requests is empty'), 400
     try:
         helperAPI.validate_date(date1)  # валидация даты
         helperAPI.validate_date(date2)  # валидация даты
         valid_code = helperAPI.check_code(code)  # валидация кода
     except AttributeError as e:
-        return jsonify(e.__str__())
+        return jsonify(str(e)), 400
     except ValueError:
-        return jsonify("Error: input date is incorrect")
+        return jsonify("Error: input date is incorrect"), 400
     currency_date1 = helperAPI.get_day(date1, valid_code)
     currency_date2 = helperAPI.get_day(date2, valid_code)
     rate = float(currency_date1['currency_rate']) - float(currency_date2['currency_rate'])
