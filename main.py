@@ -1,10 +1,12 @@
 import xml.etree.ElementTree as ET
 from flask import Flask
+from flask_cors import CORS
 from flask import jsonify, request, make_response
 from urllib.request import urlopen
 from helper import CurrencyApi
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/currencies/api/v1.0/', methods=['GET'])
