@@ -18,7 +18,7 @@ class CurrencyApi:
         """ Возвращаем массив валют"""
         for key, value in zip(self.names, self.codes):
             if value.text:
-                row = {value.text: key.text}
+                row = {'code': value.text, 'name': key.text}
                 self.list_result.append(row)
         return self.list_result
 
